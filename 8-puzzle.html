@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>8-Puzzle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fafaf9;
+    --line:#e2e0db;
+    --text:#1e1c1a;
+    --text-dim:#8a8781;
+    --blue:#3d6ea5;
+    --green:#4a8f5c;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px calc(32px + env(safe-area-inset-bottom,0px));
+    padding-top:calc(32px + env(safe-area-inset-top,0px));
+  }
+  .wrap{
+    width:100%;
+    max-width:340px;
+  }
+  h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1.4rem;
+    font-weight:600;
+    margin:0 0 18px;
+    letter-spacing:-0.01em;
+  }
+  .stats{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.85rem;
+    color:var(--text-dim);
+    margin-bottom:10px;
+  }
+  .stats b{color:var(--text);font-weight:600;}
+  .board{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:6px;
+    aspect-ratio:1/1;
+  }
+  .tile{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1.9rem;
+    font-weight:600;
+    color:var(--text);
+    cursor:pointer;
+    user-select:none;
+    transition:transform .1s ease;
+  }
+  .tile:active{transform:scale(0.95);}
+  .tile.empty{
+    background:transparent;
+    border:1px solid transparent;
+    cursor:default;
+  }
+  .tile.hint{
+    border-color:var(--blue);
+    color:var(--blue);
+  }
+  .controls{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+  }
+  button{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:0.85rem;
+    font-weight:600;
+    padding:10px 8px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--text);
+    cursor:pointer;
+  }
+  button.primary{
+    background:var(--text);
+    color:#fff;
+    border-color:var(--text);
+  }
+  button:disabled{opacity:0.4;cursor:not-allowed;}
+  .msg{
+    min-height:18px;
+    margin-top:10px;
+    font-size:0.85rem;
+    color:var(--blue);
+    text-align:center;
+  }
+  .msg.solved{color:var(--green);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>8-Puzzle</h1>
+
+  <div class="stats">
+    <span>Langkah: <b id="moveCount">0</b></span>
+    <span id="statusText">Acak papan untuk mulai</span>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <div class="controls">
+    <button id="shuffleBtn" class="primary">Acak</button>
+    <button id="hintBtn">Hint</button>
+    <button id="solveBtn">Solve</button>
+  </div>
+  <div class="msg" id="msg"></div>
+</div>
+
+<script>
+const GOAL = [1,2,3,4,5,6,7,8,0];
+let state = [...GOAL];
+let moveCount = 0;
+let solving = false;
+
+const boardEl = document.getElementById('board');
+const moveCountEl = document.getElementById('moveCount');
+const statusEl = document.getElementById('statusText');
+const msgEl = document.getElementById('msg');
+const shuffleBtn = document.getElementById('shuffleBtn');
+const hintBtn = document.getElementById('hintBtn');
+const solveBtn = document.getElementById('solveBtn');
+
+function render(hintIndex){
+  boardEl.innerHTML = '';
+  state.forEach((val, i) => {
+    const div = document.createElement('div');
+    div.className = 'tile' + (val === 0 ? ' empty' : '') + (i === hintIndex ? ' hint' : '');
+    div.textContent = val === 0 ? '' : val;
+    div.addEventListener('click', () => tryMove(i));
+    boardEl.appendChild(div);
+  });
+  moveCountEl.textContent = moveCount;
+}
+
+function isSolved(s){
+  return s.every((v,i) => v === GOAL[i]);
+}
+
+function neighborsOf(blankIdx){
+  const r = Math.floor(blankIdx/3), c = blankIdx%3;
+  const moves = [];
+  if (r>0) moves.push(blankIdx-3);
+  if (r<2) moves.push(blankIdx+3);
+  if (c>0) moves.push(blankIdx-1);
+  if (c<2) moves.push(blankIdx+1);
+  return moves;
+}
+
+function tryMove(idx, silent){
+  const blank = state.indexOf(0);
+  if (!neighborsOf(blank).includes(idx)) return false;
+  [state[blank], state[idx]] = [state[idx], state[blank]];
+  moveCount++;
+  render();
+  if (isSolved(state)){
+    statusEl.textContent = 'Selesai!';
+    msgEl.textContent = 'Puzzle terpecahkan dalam ' + moveCount + ' langkah. 🎉';
+    msgEl.classList.add('solved');
+  } else if (!silent){
+    msgEl.textContent = '';
+    msgEl.classList.remove('solved');
+  }
+  return true;
+}
+
+function shuffle(){
+  if (solving) return;
+  state = [...GOAL];
+  moveCount = 0;
+  msgEl.textContent = '';
+  msgEl.classList.remove('solved');
+  let lastBlank = -1;
+  const shuffleDepth = 14 + Math.floor(Math.random()*3); // 14-16 moves -> optimal solve stays under 20
+  for (let i=0; i<shuffleDepth; i++){
+    const blank = state.indexOf(0);
+    const options = neighborsOf(blank).filter(n => n !== lastBlank);
+    const pick = options[Math.floor(Math.random()*options.length)];
+    [state[blank], state[pick]] = [state[pick], state[blank]];
+    lastBlank = blank;
+  }
+  moveCount = 0;
+  statusEl.textContent = 'Selesaikan puzzle';
+  render();
+}
+
+// --- A* solver ---
+function manhattan(s){
+  let dist = 0;
+  for (let i=0;i<9;i++){
+    const v = s[i];
+    if (v === 0) continue;
+    const goalIdx = v - 1;
+    const r1 = Math.floor(i/3), c1 = i%3;
+    const r2 = Math.floor(goalIdx/3), c2 = goalIdx%3;
+    dist += Math.abs(r1-r2) + Math.abs(c1-c2);
+  }
+  return dist;
+}
+
+class MinHeap{
+  constructor(){ this.items = []; }
+  push(item){
+    this.items.push(item);
+    let i = this.items.length - 1;
+    while (i > 0){
+      const p = (i-1)>>1;
+      if (this.items[p].f <= this.items[i].f) break;
+      [this.items[p], this.items[i]] = [this.items[i], this.items[p]];
+      i = p;
+    }
+  }
+  pop(){
+    const top = this.items[0];
+    const last = this.items.pop();
+    if (this.items.length){
+      this.items[0] = last;
+      let i = 0;
+      while (true){
+        const l = 2*i+1, r = 2*i+2;
+        let smallest = i;
+        if (l < this.items.length && this.items[l].f < this.items[smallest].f) smallest = l;
+        if (r < this.items.length && this.items[r].f < this.items[smallest].f) smallest = r;
+        if (smallest === i) break;
+        [this.items[smallest], this.items[i]] = [this.items[i], this.items[smallest]];
+        i = smallest;
+      }
+    }
+    return top;
+  }
+  get size(){ return this.items.length; }
+}
+
+function solveAStar(start){
+  if (isSolved(start)) return [];
+  const startKey = start.join(',');
+  const gScore = { [startKey]: 0 };
+  const cameFrom = {};
+  const heap = new MinHeap();
+  heap.push({ f: manhattan(start), state: start, key: startKey });
+  const visited = new Set();
+
+  while (heap.size){
+    const cur = heap.pop();
+    if (visited.has(cur.key)) continue;
+    visited.add(cur.key);
+    if (isSolved(cur.state)){
+      // reconstruct path of moved-tile indices
+      const path = [];
+      let k = cur.key;
+      while (cameFrom[k]){
+        path.push(cameFrom[k].movedIdx);
+        k = cameFrom[k].prevKey;
+      }
+      return path.reverse();
+    }
+    const blank = cur.state.indexOf(0);
+    for (const n of neighborsOf(blank)){
+      const next = [...cur.state];
+      [next[blank], next[n]] = [next[n], next[blank]];
+      const nextKey = next.join(',');
+      const tentativeG = gScore[cur.key] + 1;
+      if (gScore[nextKey] === undefined || tentativeG < gScore[nextKey]){
+        gScore[nextKey] = tentativeG;
+        cameFrom[nextKey] = { prevKey: cur.key, movedIdx: n };
+        heap.push({ f: tentativeG + manhattan(next), state: next, key: nextKey });
+      }
+    }
+  }
+  return null; // unsolvable (shouldn't happen with valid shuffles)
+}
+
+function showHint(){
+  if (solving || isSolved(state)) return;
+  hintBtn.disabled = true;
+  statusEl.textContent = 'Menghitung...';
+  setTimeout(() => {
+    const path = solveAStar(state);
+    hintBtn.disabled = false;
+    if (!path || path.length === 0){
+      statusEl.textContent = 'Selesaikan puzzle';
+      return;
+    }
+    const moveIdx = path[0];
+    render(moveIdx);
+    statusEl.textContent = 'Solusi optimal: ' + path.length + ' langkah';
+    msgEl.textContent = 'Geser angka ' + state[moveIdx] + ' (disorot biru)';
+    msgEl.classList.remove('solved');
+  }, 20);
+}
+
+function solveAll(){
+  if (solving || isSolved(state)) return;
+  solving = true;
+  hintBtn.disabled = true;
+  solveBtn.disabled = true;
+  shuffleBtn.disabled = true;
+  statusEl.textContent = 'Menghitung solusi...';
+  setTimeout(() => {
+    const path = solveAStar(state);
+    if (!path){
+      statusEl.textContent = 'Tidak ada solusi';
+      solving = false;
+      hintBtn.disabled = false;
+      solveBtn.disabled = false;
+      shuffleBtn.disabled = false;
+      return;
+    }
+    statusEl.textContent = 'Menjalankan ' + path.length + ' langkah...';
+    let i = 0;
+    const step = () => {
+      if (i >= path.length){
+        solving = false;
+        hintBtn.disabled = false;
+        solveBtn.disabled = false;
+        shuffleBtn.disabled = false;
+        return;
+      }
+      tryMove(path[i], true);
+      i++;
+      setTimeout(step, 260);
+    };
+    step();
+  }, 20);
+}
+
+shuffleBtn.addEventListener('click', shuffle);
+hintBtn.addEventListener('click', showHint);
+solveBtn.addEventListener('click', solveAll);
+
+render();
+</script>
+</body>
+</html>
