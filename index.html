@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>8-Puzzle Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+  </head>
+<body>
+  <div class="wrap">
+    <h1>8-Puzzle</h1>
+
+    <div class="stats">
+      <span>Step: <b id="moveCount">0</b></span>
+      <span id="statusText">Shuffle the board to start</span>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="controls">
+      <button id="shuffleBtn" class="primary">Shuffle</button>
+      <button id="hintBtn">Hint</button>
+      <button id="solveBtn">Solve</button>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+<script src="script.js"></script>
+</body>
+</html>

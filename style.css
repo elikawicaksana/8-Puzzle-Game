@@ -1,0 +1,134 @@
+:root{
+    --bg:#fafaf9;
+    --line:#e2e0db;
+    --text:#1e1c1a;
+    --text-dim:#8a8781;
+    --blue:#3d6ea5;
+    --green:#4a8f5c;
+}
+
+*{
+    box-sizing:border-box;
+}
+
+html,body{
+    height:100%;
+}
+
+body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter',system-ui,sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px 16px calc(32px + env(safe-area-inset-bottom,0px));
+    padding-top:calc(32px + env(safe-area-inset-top,0px));
+}
+
+.wrap{
+    width:100%;
+    max-width:340px;
+}
+
+h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1.4rem;
+    font-weight:600;
+    margin:0 0 18px;
+    letter-spacing:-0.01em;
+}
+
+.stats{
+    display:flex;
+    justify-content:space-between;
+    font-size:0.85rem;
+    color:var(--text-dim);
+    margin-bottom:10px;
+}
+
+.stats b{
+    color:var(--text);
+    font-weight:600;
+}
+
+.board{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:6px;
+    aspect-ratio:1/1;
+}
+
+.tile{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:1.9rem;
+    font-weight:600;
+    color:var(--text);
+    cursor:pointer;
+    user-select:none;
+    transition:transform .1s ease;
+}
+
+.tile:active{
+    transform:scale(0.95);
+}
+
+.tile.empty{
+    background:transparent;
+    border:1px solid transparent;
+    cursor:default;
+}
+
+.tile.hint{
+    border-color:var(--blue);
+    color:var(--blue);
+}
+
+.controls{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+}
+
+button{
+    flex:1;
+    font-family:'Inter',sans-serif;
+    font-size:0.85rem;
+    font-weight:600;
+    padding:10px 8px;
+    border-radius:6px;
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--text);
+    cursor:pointer;
+}
+
+button.primary{
+    background:var(--text);
+    color:#fff;
+    border-color:var(--text);
+}
+
+button:disabled{
+    opacity:0.4;
+    cursor:not-allowed;
+}
+
+.msg{
+    min-height:18px;
+    margin-top:10px;
+    font-size:0.85rem;
+    color:var(--blue);
+    text-align:center;
+}
+
+.msg.solved{
+    color:var(--green);
+}
